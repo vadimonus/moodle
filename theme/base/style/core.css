@@ -2337,3 +2337,22 @@ body.lockscroll {
 .ie10 .yui3-calendar-header-label {
     display: inline-block;
 }
+
+/* MDL-52232. Taken from theme/bootstrapbase/less/bootstrap/responsive-utilities.less */
+.hidden {
+    display: none;
+    visibility: hidden;
+}
+
+/* MDL-52232. Taken from theme/bootstrapbase/less/moodle/undo.less */
+li.section.hidden,
+.block.hidden,
+.block.invisible {
+    visibility: visible;
+    display: block;
+}
+
+fieldset.hidden {
+    display: inherit;
+    visibility: inherit;
+}
