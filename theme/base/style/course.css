@@ -79,6 +79,12 @@
     right: auto;
 }
 
+/* MDL-52232 */
+.course-content ul li.section span.hidden.sectionname{
+    display: none;
+    visibility: hidden;
+}
+
 .course-content  li.section li.activity ul {
     list-style: disc;
 }
