@@ -91,7 +91,7 @@ class mysqli_native_moodle_database extends moodle_database {
             $collation = 'utf8_unicode_ci';
         }
 
-        $result = $conn->query("CREATE DATABASE $dbname DEFAULT CHARACTER SET utf8 DEFAULT COLLATE ".$collation);
+        $result = $conn->query("CREATE DATABASE `$dbname` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE ".$collation);
 
         $conn->close();
 
