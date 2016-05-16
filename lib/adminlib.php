@@ -3851,16 +3851,16 @@ class admin_setting_courselist_frontpage extends admin_setting {
         if (is_array($this->choices)) {
             return true;
         }
-        $this->choices = array(FRONTPAGENEWS          => get_string('frontpagenews'),
-            FRONTPAGEALLCOURSELIST => get_string('frontpagecourselist'),
-            FRONTPAGEENROLLEDCOURSELIST => get_string('frontpageenrolledcourselist'),
-            FRONTPAGECATEGORYNAMES => get_string('frontpagecategorynames'),
-            FRONTPAGECATEGORYCOMBO => get_string('frontpagecategorycombo'),
-            FRONTPAGECOURSESEARCH  => get_string('frontpagecoursesearch'),
-            'none'                 => get_string('none'));
-        if ($this->name === 'frontpage') {
-            unset($this->choices[FRONTPAGEENROLLEDCOURSELIST]);
+        $plugins = core_component::get_plugin_list_with_class('frontpage', '', 'frontpage.php');
+        $this->choices = array();
+        foreach ($plugins as $name => $class) {
+            $plugin = new $class();
+            if ($this->name === 'frontpageloggedin' || !$plugin->requires_authentification()) {
+                $this->choices[$plugin->name()] = $plugin->local_name();
+            }
         }
+        core_collator::asort($this->choices);
+        $this->choices['none'] = get_string('none');
         return true;
     }
 

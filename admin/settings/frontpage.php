@@ -37,18 +37,6 @@ if (!during_initial_install()) { //do not use during installation
         $temp->add(new admin_setting_configtext('frontpagecourselimit', new lang_string('configfrontpagecourselimit','admin'), new lang_string('configfrontpagecourselimithelp','admin'), 200, PARAM_INT));
 
         $temp->add(new admin_setting_sitesetcheckbox('numsections', new lang_string('sitesection'), new lang_string('sitesectionhelp','admin'), 1));
-        $temp->add(new admin_setting_sitesetselect('newsitems', new lang_string('newsitemsnumber'), '', 3,
-             array('0' => '0',
-                   '1' => '1',
-                   '2' => '2',
-                   '3' => '3',
-                   '4' => '4',
-                   '5' => '5',
-                   '6' => '6',
-                   '7' => '7',
-                   '8' => '8',
-                   '9' => '9',
-                   '10' => '10')));
         $temp->add(new admin_setting_configtext('commentsperpage', new lang_string('commentsperpage', 'admin'), '', 15, PARAM_INT));
 
         // front page default role
@@ -70,5 +58,12 @@ if (!during_initial_install()) { //do not use during installation
         $temp->add(new admin_setting_configselect('defaultfrontpageroleid', new lang_string('frontpagedefaultrole', 'admin'), '', $defaultfrontpageroleid, $options));
 
         $ADMIN->add('frontpage', $temp);
+
+        // Adding frontpage plugins.
+        $plugins = core_plugin_manager::instance()->get_plugins_of_type('frontpage');
+        core_collator::asort_objects_by_property($plugins, 'displayname');
+        foreach ($plugins as $plugin) {
+            $plugin->load_settings($ADMIN, 'frontpage', $hassiteconfig);
+        }
     }
 }

@@ -450,6 +450,7 @@ $cache = '.var_export($cache, true).';
             'tool'          => $CFG->dirroot.'/'.$CFG->admin.'/tool',
             'cachestore'    => $CFG->dirroot.'/cache/stores',
             'cachelock'     => $CFG->dirroot.'/cache/locks',
+            'frontpage'     => $CFG->dirroot . '/frontpage',
         );
         $parents = array();
         $subplugins = array();

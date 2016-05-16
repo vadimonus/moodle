@@ -2053,5 +2053,29 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2016051300.00);
     }
 
+    if ($oldversion < 2016051600.01) {
+        $mapping = array(
+            FRONTPAGENEWS => 'news',
+            FRONTPAGECATEGORYNAMES => 'categorynames',
+            FRONTPAGECATEGORYCOMBO => 'categorycombo',
+            FRONTPAGEENROLLEDCOURSELIST => 'enrolledcourselist',
+            FRONTPAGEALLCOURSELIST => 'allcourselist',
+            FRONTPAGECOURSESEARCH => 'coursesearch'
+        );
+        $settings = array('frontpage', 'frontpageloggedin');
+        foreach ($settings as $setting) {
+            if (empty($CFG->$setting)) {
+                continue;
+            }
+            $plugins = $CFG->$setting;
+            $plugins = explode(',', $plugins);
+            foreach ($plugins as $key => $plugin) {
+                $plugins[$key] = $mapping[$plugin];
+            }
+            set_config($setting, implode(',', $plugins));
+        }
+        upgrade_main_savepoint(true, 2016051600.01);
+    }
+
     return true;
 }
