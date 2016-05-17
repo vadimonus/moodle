@@ -2053,7 +2053,7 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2016051300.00);
     }
 
-    if ($oldversion < 2016051600.01) {
+    if ($oldversion < 2016051600.05) {
         $mapping = array(
             FRONTPAGENEWS => 'news',
             FRONTPAGECATEGORYNAMES => 'categorynames',
@@ -2064,17 +2064,24 @@ function xmldb_main_upgrade($oldversion) {
         );
         $settings = array('frontpage', 'frontpageloggedin');
         foreach ($settings as $setting) {
-            if (empty($CFG->$setting)) {
-                continue;
+            if (!empty($CFG->$setting)) {
+                $plugins = $CFG->$setting;
+            } else {
+                $plugins = array();
             }
-            $plugins = $CFG->$setting;
             $plugins = explode(',', $plugins);
             foreach ($plugins as $key => $plugin) {
                 $plugins[$key] = $mapping[$plugin];
             }
+            $checkbox = new admin_setting_sitesetcheckbox('numsections', '', '', 1);
+            $numsections = $checkbox->get_setting();
+            if ($numsections > 0) {
+                array_unshift($plugins, 'topicsection');
+            }
+            array_push($plugins, 'newcoursebutton');
             set_config($setting, implode(',', $plugins));
         }
-        upgrade_main_savepoint(true, 2016051600.01);
+        upgrade_main_savepoint(true, 2016051600.05);
     }
 
     return true;
