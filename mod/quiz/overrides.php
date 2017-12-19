@@ -36,7 +36,7 @@ list($course, $cm) = get_course_and_cm_from_cmid($cmid, 'quiz');
 $quiz = $DB->get_record('quiz', array('id' => $cm->instance), '*', MUST_EXIST);
 
 // Get the course groups.
-$groups = groups_get_all_groups($cm->course);
+$groups = groups_get_activity_allowed_groups($cm);
 if ($groups === false) {
     $groups = array();
 }
@@ -83,23 +83,57 @@ if (!empty($orphaned)) {
 }
 
 // Fetch all overrides.
+$activitygroupmode = groups_get_activity_groupmode($cm);
+if ($activitygroupmode == NOGROUPS || $activitygroupmode == VISIBLEGROUPS ||
+        has_capability('moodle/site:accessallgroups', $context, $USER->id)) {
+    $limitgroups = false;
+} else {
+    $limitgroups = true;
+    $groupsidarray = array();
+    foreach ($groups as $group) {
+        $groupsidarray[] = $group->id;
+    }
+}
 if ($groupmode) {
     $colname = get_string('group');
-    $sql = 'SELECT o.*, g.name
-                FROM {quiz_overrides} o
-                JOIN {groups} g ON o.groupid = g.id
-                WHERE o.quiz = :quizid
-                ORDER BY g.name';
-    $params = array('quizid' => $quiz->id);
+    if ($limitgroups) {
+        list($groupwhere, $params) = $DB->get_in_or_equal($groupsidarray, SQL_PARAMS_NAMED, 'group', true, true);
+        $sql = 'SELECT o.*, g.name
+                    FROM {quiz_overrides} o
+                    JOIN {groups} g ON o.groupid = g.id
+                    WHERE o.quiz = :quizid AND g.id ' . $groupwhere . '
+                    ORDER BY g.name';
+        $params['quizid'] = $quiz->id;
+    } else {
+        $sql = 'SELECT o.*, g.name
+                    FROM {quiz_overrides} o
+                    JOIN {groups} g ON o.groupid = g.id
+                    WHERE o.quiz = :quizid
+                    ORDER BY g.name';
+        $params = array('quizid' => $quiz->id);
+    }
 } else {
     $colname = get_string('user');
-    list($sort, $params) = users_order_by_sql('u');
-    $sql = 'SELECT o.*, ' . get_all_user_name_fields(true, 'u') . '
+    list($sort, $sortparams) = users_order_by_sql('u');
+    if ($limitgroups) {
+        list($groupwhere, $groupparams) = $DB->get_in_or_equal($groupsidarray, SQL_PARAMS_NAMED, 'group', true, true);
+        $sql = 'SELECT o.*, ' . get_all_user_name_fields(true, 'u') . '
+            FROM {quiz_overrides} o
+            JOIN {user} u ON o.userid = u.id
+            JOIN {groups_members} gm ON u.id = gm.userid
+            WHERE o.quiz = :quizid AND gm.groupid ' . $groupwhere . '
+            ORDER BY ' . $sort;
+        $params = array_merge($sortparams, $groupparams);
+        $params['quizid'] = $quiz->id;
+    } else {
+        $sql = 'SELECT o.*, ' . get_all_user_name_fields(true, 'u') . '
             FROM {quiz_overrides} o
             JOIN {user} u ON o.userid = u.id
             WHERE o.quiz = :quizid
             ORDER BY ' . $sort;
-    $params['quizid'] = $quiz->id;
+        $params = $sortparams;
+        $params['quizid'] = $quiz->id;
+    }
 }
 
 $overrides = $DB->get_records_sql($sql, $params);

@@ -78,7 +78,7 @@ class quiz_override_form extends moodleform {
     }
 
     protected function definition() {
-        global $CFG, $DB;
+        global $CFG, $DB, $USER;
 
         $cm = $this->cm;
         $mform = $this->_form;
@@ -96,7 +96,7 @@ class quiz_override_form extends moodleform {
                 $mform->freeze('groupid');
             } else {
                 // Prepare the list of groups.
-                $groups = groups_get_all_groups($cm->course);
+                $groups = groups_get_activity_allowed_groups($cm);
                 if (empty($groups)) {
                     // Generate an error.
                     $link = new moodle_url('/mod/quiz/overrides.php', array('cmid'=>$cm->id));
@@ -136,9 +136,25 @@ class quiz_override_form extends moodleform {
                             'This is unexpected, and a problem because there is no way to pass these ' .
                             'parameters to get_users_by_capability. See MDL-34657.');
                 }
+                $activitygroupmode = groups_get_activity_groupmode($cm);
+                $context = context_module::instance($cm->id);
+                if ($activitygroupmode == NOGROUPS || $activitygroupmode == VISIBLEGROUPS ||
+                        has_capability('moodle/site:accessallgroups', $context, $USER->id)) {
+                    $groupsidarray = '';
+                } else {
+                    $groups = groups_get_activity_allowed_groups($cm);
+                    if (empty($groups)) {
+                        $link = new moodle_url('/mod/quiz/overrides.php', array('cmid'=>$cm->id));
+                        print_error('groupsnone', 'quiz', $link);
+                    }
+                    $groupsidarray = array();
+                    foreach ($groups as $group) {
+                        $groupsidarray[] = $group->id;
+                    }
+                }
                 $users = get_users_by_capability($this->context, 'mod/quiz:attempt',
                         'u.id, u.email, ' . get_all_user_name_fields(true, 'u'),
-                        $sort, '', '', '', '', false, true);
+                        $sort, '', '', $groupsidarray, '', false, true);
 
                 // Filter users based on any fixed restrictions (groups, profile).
                 $info = new \core_availability\info_module($cm);
